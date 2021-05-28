@@ -1,6 +1,7 @@
 {
     "scripts": {
-        "test": "nodemon server.js"
+        "test": "nodemon server.js",
+        "run": "nodemon crontab/tracks.js"
     },
     "dependencies": {
         "axios": "~0.21.1",

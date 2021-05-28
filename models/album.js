@@ -6,9 +6,19 @@ var Track = require('./track')
 var AlbumSchema = mongoose.Schema({
     name: String,
     artist: String,
-    listeners: Number,
     playcount: Number,
-    tracks: [Track]
+    image: String,
+    tracks: [{
+        id_object: String,
+        id: String,
+        title: String,
+        rank: Number,
+        image: String,
+        duration: Number,
+        media: String,
+        description: String,
+        username: String,
+    }]
 },
     {
         timestamps: true,

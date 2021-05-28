@@ -36,8 +36,15 @@ function albumgetinfo(artist, album, idObject) {
         };
 
         axios(config)
-            .then((response) => {
-                resolve(response.data.artists.artist)
+            .then( async (response) => {
+                let tracksSoucloud = response.data.album.tracks
+                let tracks = []
+                for (let index = 0; index < tracksSoucloud.length; index++) {
+                    const element = tracksSoucloud[index];
+                    const track = await searchSoundcloud(element.name)
+                    tracks.push(track)
+                }
+                resolve(tracks)
             })
             .catch((error) => {
                 console.log(error);
@@ -46,16 +53,31 @@ function albumgetinfo(artist, album, idObject) {
     })
 }
 
-function searchSoundcloud(keySearch) {
+function searchSoundcloud(keySearch, rank) {
     return new Promise((resolve, reject) => {
         let config = {
             method: 'get',
-            url: `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${api_key}&artist=${artist}&album=${album}&format=json`
+            url: `https://api-mobile.soundcloud.com/search/tracks?q=${keySearch}&limit=1&client_id=Fiy8xlRI0xJNNGDLbPmGUjTpPRESPx8C`
         };
 
         axios(config)
             .then((response) => {
-                resolve(response.data.artists.artist)
+                try {
+                    const track = response.data.collection[0]
+                    let transcodings = track.media.transcodings
+                    resolve({
+                        id: track.urn,
+                        title: track.title,
+                        rank: rank,
+                        image: track.artwork_url_template.replace("{size}", "t300x300"),
+                        duration: track.full_duration,
+                        description: track.description,
+                        username: track["_embedded"].user.username,
+                        media: transcodings[transcodings.length - 1]
+                    })
+                } catch (error) {
+                    reject(error)
+                }
             })
             .catch((error) => {
                 console.log(error);
@@ -63,16 +85,26 @@ function searchSoundcloud(keySearch) {
             });
     })
 }
+
+const Album = require('../models/album')
 
 async function listAlbum(artist) {
     let nameArtist = artist.name
     let albums = artist.albums
     for (let index = 0; index < albums.length; index++) {
         const element = albums[index];
-        await albumgetinfo(nameArtist, element.name, element._id)
+        let tracks = await albumgetinfo(nameArtist, element.name, element._id)
+        let album = element
+        album["tracks"] = tracks
+        //Save
+        Album.updateOne({ name: element.name }, { $set: album }, { new: true, upsert: true },
+            function (err, done) {
+                console.log(artist, err, done)
+            })
     }
 }
 
+const Artist = require('../models/artist')
 Artist.find()
     .sort({rank: 1})
     .exec(function (err, artists) {
