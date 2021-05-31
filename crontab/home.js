@@ -1,4 +1,6 @@
 const axios = require('axios');
+const { parse } = require('node-html-parser');
+const fs = require('fs');
 
 require('dotenv').config()
 var mongoose = require('mongoose');
@@ -20,82 +22,82 @@ const connectWithRetry = function () { // when using with docker, at the time we
 connectWithRetry()
 
 
-function apikey() {
-    let array = ["2c38f8467b8a9e1546095e29e99e934d", "c04b75e325aed0d3efd03dd90658a11d", "027165dc644bfe1f19ee22d042c4b76d", "76bb8ff723795d082302290b16b44c89", "874f12161379f13d1196d099617272db", "08e5c9eecb5f8b6c73eb8d9908843d09", "5afe73c37d31af66ecc7d578f0114625", "253344ec8e3ab0125cf75890154b2aa2"]
-    const random = Math.floor(Math.random() * array.length);
-    return array[random];
+function rgba2hex(orig) {
+    rgb = orig.replace(/\s/g, '').match(/^rgba?\((\d+),(\d+),(\d+),?([^,\s)]+)?/i),
+        hex = rgb ?
+            (rgb[1] | 1 << 8).toString(16).slice(1) +
+            (rgb[2] | 1 << 8).toString(16).slice(1) +
+            (rgb[3] | 1 << 8).toString(16).slice(1) : orig;
+    return hex;
 }
 
-let api_key = apikey()
-
-function gettopartists() {
+const Tag = require('../models/tag')
+async function getHome() {
     return new Promise((resolve, reject) => {
         let config = {
             method: 'get',
-            url: `http://ws.audioscrobbler.com/2.0/?method=chart.gettopartists&api_key=${api_key}&format=json&limit=20`
+            url: `https://www.last.fm/music`
         };
 
         axios(config)
-            .then((response) => {
-                resolve(response.data.artists.artist)
+            .then(async (response) => {
+                const root = parse(response.data)
+                const imagesHTML = root.querySelectorAll('.music-more-tags-tag-background')
+                const tagsHTML = root.querySelectorAll('.music-more-tags-tag-link')
+                const overlaysHTML = root.querySelectorAll('.music-more-tags-tag-background-overlay')
+                // let tags = []
+                for (let index = 0; index < tagsHTML.length; index++) {
+                    const tag = tagsHTML[index];
+                    const img = imagesHTML[index].getAttribute("style");
+                    const overlay = overlaysHTML[index].getAttribute("style")
+                    const arrayColor = overlay.split("(")[1].split(')')[0].split(",")
+                    let strColor = "rgb("
+                    for (let index = 0; index < arrayColor.length - 1; index++) {
+                        const element = arrayColor[index];
+                        if (index == 0) {
+                            strColor += `${element}`
+                        } else {
+                            strColor += `, ${element}`
+                        }
+                    }
+                    strColor += ")"
+                    //Save
+                    Tag.updateOne({ name: tag.textContent }, {
+                        $set: {
+                            name: tag.textContent,
+                            image: img.split("'")[1].split("'")[0],
+                            color: rgba2hex(strColor)
+                        }
+                    }, { new: true, upsert: true },
+                        function (err, done) {
+                            console.log("Tag", err, done)
+                        })
+                    // tags.push({
+                    //     name: tag.textContent,
+                    //     image: img.split("'")[1].split("'")[0],
+                    //     color: rgba2hex(strColor)
+                    // })
+                }
+                resolve("")
             })
             .catch((error) => {
                 console.log(error);
                 reject(error)
             });
     })
-}
-
-const Artist = require('../models/artist')
-function gettopalbums(artist, rank) {
-    let config = {
-        method: 'get',
-        url: `http://ws.audioscrobbler.com/2.0/?method=artist.gettopalbums&artist=${artist}&api_key=${api_key}&format=json&limit=20`
-    };
-
-    axios(config)
-        .then((response) => {
-            let topalbums = response.data.topalbums.album
-            let albums = []
-            for (let index = 0; index < topalbums.length; index++) {
-                const element = topalbums[index];
-                let images = element.image
-                let image = images[images.length - 1]
-                albums.push({
-                    name: element.name,
-                    playcount: element.playcount,
-                    image:  image["#text"]
-                })
-            }
-
-            let artistObj = {
-                name: artist,
-                rank: rank,
-                albums: albums
-            }
-            Artist.updateOne({ name: artist }, { $set: artistObj }, { new: true, upsert: true },
-                function (err, done) {
-                    console.log(artist, err, done)
-                })
-        })
-        .catch((error) => {
-            console.log(error);
-        });
 
 }
 
 async function init() {
-    let array = await gettopartists()
+    let array = await getHome()
         .catch(function (err) {
 
         })
     if (!array) {
         return
     }
-    for (let index = 0; index < array.length; index++) {
-        const element = array[index];
-        gettopalbums(element.name, index)
-    }
+    let data = JSON.stringify(array);
+    fs.writeFileSync('tags.json', data);
 }
 
 init()

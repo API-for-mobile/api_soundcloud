@@ -1,4 +1,5 @@
 const axios = require('axios');
+const fs = require('fs');
 
 require('dotenv').config()
 var mongoose = require('mongoose');
@@ -28,16 +29,16 @@ function apikey() {
 
 let api_key = apikey()
 
-function albumgetinfo(artist, album, idObject) {
+function gettoptracks(tag) {
     return new Promise((resolve, reject) => {
         let config = {
             method: 'get',
-            url: `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${api_key}&artist=${artist}&album=${album}&format=json`
+            url: `http://ws.audioscrobbler.com/2.0/?method=tag.gettoptracks&tag=${tag}&api_key=${api_key}&format=json`
         };
 
         axios(config)
             .then( async (response) => {
-                let tracksSoucloud = response.data.album.tracks
+                let tracksSoucloud = response.data.tracks.track
                 let tracks = []
                 for (let index = 0; index < tracksSoucloud.length; index++) {
                     const element = tracksSoucloud[index];
@@ -57,7 +58,7 @@ function searchSoundcloud(keySearch, rank) {
     return new Promise((resolve, reject) => {
         let config = {
             method: 'get',
-            url: `https://api-mobile.soundcloud.com/search/tracks?q=${keySearch}&limit=1&client_id=Fiy8xlRI0xJNNGDLbPmGUjTpPRESPx8C`
+            url: `https://api-mobile.soundcloud.com/search/tracks?q=${encodeURI(keySearch)}&limit=1&client_id=Fiy8xlRI0xJNNGDLbPmGUjTpPRESPx8C`
         };
 
         axios(config)
@@ -69,7 +70,7 @@ function searchSoundcloud(keySearch, rank) {
                         id: track.urn,
                         title: track.title,
                         rank: rank,
-                        image: track.artwork_url_template.replace("{size}", "t300x300"),
+                        image: track.artwork_url_template ? track.artwork_url_template.replace("{size}", "t300x300") : "",
                         duration: track.full_duration,
                         description: track.description,
                         username: track["_embedded"].user.username,
@@ -86,29 +87,31 @@ function searchSoundcloud(keySearch, rank) {
     })
 }
 
-const Album = require('../models/album')
+async function listTrack(tag) {
 
-async function listAlbum(artist) {
-    let nameArtist = artist.name
-    let albums = artist.albums
-    for (let index = 0; index < albums.length; index++) {
-        const element = albums[index];
-        let tracks = await albumgetinfo(nameArtist, element.name, element._id)
-        let album = element
-        album["tracks"] = tracks
-        //Save
-        Album.updateOne({ name: element.name }, { $set: album }, { new: true, upsert: true },
-            function (err, done) {
-                console.log(artist, err, done)
-            })
+    let tracks = await gettoptracks(tag.name)
+    let album = {
+        name : tag.name,
+        image: tag.image,
+        color: tag.color,
+        tracks: tracks
     }
+    //Save
+    fs.writeFileSync(`./tags/${tag.name}.json`, JSON.stringify(album))
+    console.log("done", tag.name)
 }
 
-const Artist = require('../models/artist')
-Artist.find()
-    .sort({rank: 1})
-    .exec(function (err, artists) {
-        artists.forEach(element => {
-            listAlbum(element)
-        });
-    })
+
+const Tag = require('../models/tag')
+async function init() {
+    let tags = await Tag.find()
+    // .exec( async function (err, tags) {
+        for (let index = 0; index < tags.length; index++) {
+            const element = tags[index];
+            await listTrack(element)
+            console.log(`done ${index}`, element.name)
+        }
+    // })
+}
+
+init()

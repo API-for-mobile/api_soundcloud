@@ -8,6 +8,8 @@
         "body-parser": "^1.19.0",
         "dotenv": "~10.0.0",
         "express": "^4.17.1",
-        "mongoose": "~5.12.11"
+        "mongoose": "~5.12.11",
+        "node-html-parser": "~3.3.4",
+        "rgb-hex": "~4.0.0"
     }
 }
