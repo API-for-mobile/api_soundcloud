@@ -65,7 +65,12 @@ function searchSoundcloud(keySearch, rank) {
             .then((response) => {
                 try {
                     const track = response.data.collection[0]
-                    let transcodings = track.media.transcodings
+                    let stream_url = track.stream_url
+                    if (!stream_url) {
+                        let transcodings = track.media.transcodings
+                        stream_url = transcodings[transcodings.length - 1].url
+                    }
+                    stream_url = stream_url.replace("https://api-mobile.soundcloud.com","")
                     resolve({
                         id: track.urn,
                         title: track.title,
@@ -74,7 +79,7 @@ function searchSoundcloud(keySearch, rank) {
                         duration: track.full_duration,
                         description: track.description,
                         username: track["_embedded"].user.username,
-                        media: transcodings[transcodings.length - 1]
+                        media: stream_url
                     })
                 } catch (error) {
                     reject(error)
