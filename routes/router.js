@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-var path = require('path');
+const search = require('./search')
+router.use('/search', search())
 
+var path = require('path');
 const Tag = require('../models/tag')
 router.get('/tags', async function (req, res) {
     Tag.find()
