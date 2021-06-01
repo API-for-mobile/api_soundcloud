@@ -55,7 +55,7 @@ function tracks (req, res, next) {
         });
 }
 
-function albums (req, res, nexr) {
+function albums (req, res, next) {
     const keySearch = req.query.q
     if (!keySearch) {
         next()
@@ -102,7 +102,7 @@ function albums (req, res, nexr) {
         });
 }
 
-function playlists (req, res, nexr) {
+function playlists (req, res, next) {
     const keySearch = req.query.q
     if (!keySearch) {
         next()
