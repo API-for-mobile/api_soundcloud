@@ -7,6 +7,9 @@ router.use('/search', search())
 const playlist = require('./playlist')
 router.use('/playlist', playlist())
 
+const related = require('./related')
+router.use('/related', related())
+
 var path = require('path');
 const Tag = require('../models/tag')
 router.get('/tags', async function (req, res) {
