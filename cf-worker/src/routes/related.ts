@@ -16,7 +16,7 @@ async function Related(request: Request): Promise<Response> {
   }
 
   let url = `https://api-mobile.soundcloud.com/tracks/${id}/related?client_id=Fiy8xlRI0xJNNGDLbPmGUjTpPRESPx8C`
-  console.log(url)
+
   var requestOptions = {
     method: 'GET',
     headers: request.headers
