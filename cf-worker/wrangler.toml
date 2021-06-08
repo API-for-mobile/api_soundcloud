@@ -1,0 +1,7 @@
+name = "drive"
+type = "webpack"
+account_id = "a772b9fd628bf5f4a00435250c73efd7"
+workers_dev = true
+route = ""
+zone_id = ""
+webpack_config = "webpack.config.js"
