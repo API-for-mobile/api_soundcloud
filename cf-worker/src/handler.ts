@@ -18,9 +18,8 @@ async function handleRequest(event: FetchEvent) {
    r.get('/api/search/tracks.*', (request) => Search.tracks(request_ev))
    r.get('/api/search/albums.*', (request) => Search.albums(request_ev))
    r.get('/api/search/playlists.*', (request) => Search.playlists(request_ev))
-
-//    r.get('/api/playlist.*', (request) => Playlist(request_ev))
-//    r.get('/api/related.*', (request) => Related(request_ev))
+   r.get('/api/playlist.*', (request) => Playlist(request_ev))
+   r.get('/api/related.*', (request) => Related(request_ev))
 
    const resp = await r.route(request_ev)
    return resp
