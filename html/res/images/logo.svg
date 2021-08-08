@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024px" height="1024px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>ic_app</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#FFFFFF" offset="0%"></stop>
+            <stop stop-color="#8B8B8B" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="ic_app">
+            <rect id="Rectangle" fill="url(#linearGradient-1)" x="0" y="0" width="1024" height="1024"></rect>
+            <circle id="Oval" stroke="#000000" stroke-width="44" cx="511.5" cy="511.5" r="425.5"></circle>
+            <path d="M369.9,681.461736 L369.9,340.455129 C369.9,300.918131 411.949844,276.207507 444.105607,295.976006 L740.928037,466.47931 C775.557321,486.247808 775.557321,538.140118 740.928037,557.908617 L444.105607,728.411921 C411.949844,745.709357 369.9,720.998734 369.9,681.461736 Z" id="play" fill="#000000" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>
